@@ -1,5 +1,5 @@
+import { useState } from 'react';
 import Layout from '@/components/Layout';
-import BtnSecondary from '@/components/ui/BtnSecondary';
 
 const NAVY = '#0B1F3A';
 const DEEP = '#081629';
@@ -55,79 +55,144 @@ const POSTS = [
 const TAGS = ['Все статьи', 'Страховые споры', 'Защита бизнеса', 'Законодательство', 'Защита потребителей', 'Семейные споры', 'Взыскание долгов'];
 
 export default function Blog() {
+  const [activeTag, setActiveTag] = useState('Все статьи');
+
+  const filtered = activeTag === 'Все статьи'
+    ? POSTS
+    : POSTS.filter(p => p.tag === activeTag);
+
   return (
     <Layout>
       {/* Hero */}
       <section
-        className="relative pt-32 pb-20"
+        className="relative pt-28 sm:pt-32 pb-14 sm:pb-20"
         style={{ background: `linear-gradient(160deg, ${DEEP} 0%, ${NAVY} 100%)`, borderBottom: '1px solid rgba(200,163,95,0.12)' }}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10">
+          <div className="flex items-center gap-3 mb-5">
             <div className="w-8 h-px" style={{ backgroundColor: G }} />
             <span className="font-golos text-[11px] tracking-[0.3em] uppercase" style={{ color: G }}>полезные материалы</span>
           </div>
-          <h1 className="font-cormorant font-semibold text-white mb-6" style={{ fontSize: 'clamp(36px, 4.5vw, 60px)' }}>
+          <h1
+            className="font-cormorant font-semibold text-white leading-[1.05] mb-5"
+            style={{ fontSize: 'clamp(42px, 6vw, 80px)' }}
+          >
             Блог
           </h1>
-          <p className="font-golos text-[16px] leading-relaxed max-w-2xl" style={{ color: PROSE }}>
+          <p className="font-golos text-[14px] sm:text-[16px] leading-relaxed max-w-2xl" style={{ color: PROSE }}>
             Разборы дел, изменения законодательства, полезные инструкции. Без воды — только практически применимая информация.
           </p>
         </div>
       </section>
 
-      {/* Теги */}
+      {/* Фильтр по тегам */}
       <section style={{ background: DEEP, borderBottom: '1px solid rgba(200,163,95,0.08)' }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-6">
-          <div className="flex flex-wrap gap-3">
-            {TAGS.map((tag, i) => (
-              <button
-                key={tag}
-                className="font-golos text-[12px] px-4 py-2 transition-all duration-200"
-                style={{
-                  background: i === 0 ? 'rgba(200,163,95,0.15)' : 'transparent',
-                  border: i === 0 ? `1px solid rgba(200,163,95,0.4)` : '1px solid rgba(200,163,95,0.12)',
-                  color: i === 0 ? G : MUTED,
-                }}
-              >
-                {tag}
-              </button>
-            ))}
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10 py-5">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            {TAGS.map((tag) => {
+              const isActive = activeTag === tag;
+              return (
+                <button
+                  key={tag}
+                  onClick={() => setActiveTag(tag)}
+                  className="font-golos text-[12px] sm:text-[13px] px-4 py-2 transition-all duration-200"
+                  style={{
+                    background: isActive ? G : 'transparent',
+                    border: isActive ? `1px solid ${G}` : '1px solid rgba(200,163,95,0.2)',
+                    color: isActive ? DEEP : MUTED,
+                    fontWeight: isActive ? 600 : 400,
+                  }}
+                >
+                  {tag}
+                  {tag !== 'Все статьи' && (
+                    <span
+                      className="ml-1.5 font-golos text-[10px]"
+                      style={{ opacity: isActive ? 0.7 : 0.5 }}
+                    >
+                      ({POSTS.filter(p => p.tag === tag).length})
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* Статьи */}
       <section style={{ background: DEEP }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {POSTS.map((post) => (
-              <article
-                key={post.title}
-                className="p-6 flex flex-col cursor-pointer group"
-                style={{ background: NAVY, border: '1px solid rgba(200,163,95,0.1)' }}
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="font-golos text-[10px] tracking-[0.2em] uppercase" style={{ color: G }}>{post.tag}</div>
-                  <div className="font-golos text-[11px]" style={{ color: MUTED }}>{post.readTime}</div>
-                </div>
-                <h2 className="font-golos font-semibold text-white text-[15px] leading-snug mb-3 group-hover:opacity-80 transition-opacity flex-1">
-                  {post.title}
-                </h2>
-                <p className="font-golos text-[13px] leading-relaxed mb-5" style={{ color: PROSE }}>
-                  {post.excerpt}
-                </p>
-                <div className="flex items-center justify-between mt-auto">
-                  <span className="font-golos text-[12px]" style={{ color: MUTED }}>{post.date}</span>
-                  <span className="font-golos text-[12px]" style={{ color: G }}>Читать →</span>
-                </div>
-              </article>
-            ))}
-          </div>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-10 py-12 sm:py-20">
 
-          <div className="text-center mt-12">
-            <BtnSecondary to="/blog">Загрузить ещё</BtnSecondary>
-          </div>
+          {filtered.length === 0 ? (
+            <div className="text-center py-20">
+              <p className="font-golos text-[15px]" style={{ color: MUTED }}>
+                Статей в этой категории пока нет
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {filtered.map((post) => (
+                <article
+                  key={post.title}
+                  className="flex flex-col group cursor-pointer"
+                  style={{ background: NAVY, border: '1px solid rgba(200,163,95,0.1)' }}
+                >
+                  {/* Цветная полоска тега сверху */}
+                  <div style={{ height: '2px', background: G, opacity: 0.5 }} />
+
+                  <div className="p-5 sm:p-6 flex flex-col flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <span
+                        className="font-golos text-[10px] tracking-[0.2em] uppercase px-2.5 py-1"
+                        style={{
+                          background: 'rgba(200,163,95,0.1)',
+                          border: '1px solid rgba(200,163,95,0.2)',
+                          color: G,
+                        }}
+                      >
+                        {post.tag}
+                      </span>
+                      <span className="font-golos text-[11px]" style={{ color: MUTED }}>{post.readTime}</span>
+                    </div>
+
+                    <h2
+                      className="font-golos font-semibold text-white text-[15px] leading-snug mb-3 flex-1 transition-opacity group-hover:opacity-75"
+                    >
+                      {post.title}
+                    </h2>
+
+                    <p className="font-golos text-[13px] leading-relaxed mb-5" style={{ color: PROSE }}>
+                      {post.excerpt}
+                    </p>
+
+                    <div
+                      className="flex items-center justify-between pt-4"
+                      style={{ borderTop: '1px solid rgba(200,163,95,0.08)' }}
+                    >
+                      <span className="font-golos text-[12px]" style={{ color: MUTED }}>{post.date}</span>
+                      <span
+                        className="font-golos text-[12px] font-medium flex items-center gap-1 transition-opacity group-hover:opacity-75"
+                        style={{ color: G }}
+                      >
+                        Читать →
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+
+          {activeTag === 'Все статьи' && (
+            <div className="text-center mt-10 sm:mt-12">
+              <button
+                className="font-golos text-[13px] font-medium px-7 py-3.5 transition-all duration-200 hover:opacity-80"
+                style={{ border: '1px solid rgba(200,163,95,0.35)', color: G }}
+              >
+                Загрузить ещё
+              </button>
+            </div>
+          )}
         </div>
       </section>
     </Layout>
