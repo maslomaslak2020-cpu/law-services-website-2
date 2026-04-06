@@ -102,8 +102,8 @@ export default function Index() {
                 </span>
               </div>
 
-              <h1 className="font-cormorant font-semibold text-white leading-[1.08] mb-5"
-                style={{ fontSize: 'clamp(36px, 4.5vw, 64px)' }}>
+              <h1 className="font-cormorant font-semibold text-white leading-[1.05] mb-5"
+                style={{ fontSize: 'clamp(42px, 6vw, 82px)' }}>
                 Юридическая помощь бизнесу и гражданам
               </h1>
 
