@@ -18,8 +18,15 @@ export default {
 				'2xl': '1400px'
 			}
 		},
+		fontFamily: {
+			cormorant: ['"Cormorant Garamond"', 'serif'],
+			golos: ['"Golos Text"', 'sans-serif'],
+		},
 		extend: {
 			colors: {
+				navy: '#0B1F3A',
+				deep: '#081629',
+				gold: '#C8A35F',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
