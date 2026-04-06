@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import Layout from '@/components/Layout';
-import BtnPrimary from '@/components/ui/BtnPrimary';
 import Icon from '@/components/ui/icon';
+import SituationModal from '@/components/SituationModal';
 
 const NAVY = '#0B1F3A';
 const DEEP = '#081629';
@@ -8,116 +9,129 @@ const G = '#C8A35F';
 const PROSE = 'rgba(201,212,227,0.82)';
 const MUTED = 'rgba(201,212,227,0.5)';
 
-const AREAS = [
+const ALL_AREAS = [
   {
+    num: '01',
     icon: 'Car',
-    title: 'Страховые споры',
-    subtitle: 'ОСАГО, КАСКО, занижение выплат',
-    problem: 'Страховая компания занизила выплату, отказала в возмещении или затягивает сроки выплаты.',
+    title: 'Страховые споры (ОСАГО, КАСКО)',
+    for: 'citizens',
+    problem: 'Страховая компания занижает выплату, затягивает сроки или отказывает в возмещении без законных оснований.',
     actions: [
-      'Анализ документов и расчёт реального ущерба',
-      'Направление досудебной претензии',
-      'Подача иска, взыскание страховки + штрафа + неустойки',
-      'Контроль исполнения решения суда',
+      'Проводим независимую экспертизу',
+      'Направляем досудебную претензию',
+      'При необходимости подаём иск',
+      'Взыскиваем ущерб, штраф 50% и неустойку',
     ],
-    result: 'Взыскание полной суммы ущерба, штрафа 50% по ЗоЗПП и неустойки за просрочку',
+    result: 'Клиент получает полную страховую выплату + штраф за незаконный отказ + неустойку за просрочку.',
   },
   {
+    num: '02',
     icon: 'AlertTriangle',
-    title: 'Споры по ДТП',
-    subtitle: 'Возмещение ущерба от виновника',
-    problem: 'Виновник ДТП скрылся, нет страховки или страховое покрытие не покрывает реальный ущерб.',
+    title: 'Споры по ДТП и возмещению ущерба',
+    for: 'citizens',
+    problem: 'Виновник скрылся, страховая недоплатила, или причинён вред здоровью без компенсации.',
     actions: [
-      'Оформление документов и сбор доказательств',
-      'Взаимодействие с РСА и страховыми компаниями',
-      'Иск к виновнику на сумму сверх страхового возмещения',
-      'Взыскание морального вреда',
+      'Устанавливаем виновника',
+      'Формируем доказательную базу',
+      'Ведём переговоры и судебное взыскание',
     ],
-    result: 'Полное возмещение ущерба, включая утрату товарной стоимости и дополнительные расходы',
+    result: 'Возмещение материального ущерба, вреда здоровью, утраченного заработка и морального вреда.',
   },
   {
+    num: '03',
     icon: 'ShieldCheck',
     title: 'Защита прав потребителей',
-    subtitle: 'Возврат, расторжение, компенсации',
-    problem: 'Продавец отказывает в возврате, застройщик нарушает сроки, некачественная услуга или товар.',
+    for: 'citizens',
+    problem: 'Продавец отказал в возврате, застройщик нарушил сроки, банк списал деньги незаконно.',
     actions: [
-      'Претензия продавцу / исполнителю',
-      'Экспертиза качества товара или услуги',
-      'Исковое заявление + штраф 50% по ЗоЗПП',
-      'Взыскание неустойки и морального вреда',
+      'Составляем претензию',
+      'Собираем доказательства',
+      'Подаём иск с требованием неустойки, штрафа и компенсации',
     ],
-    result: 'Возврат денег, расторжение договора, компенсация всех потерь + штраф',
+    result: 'Возврат денег, неустойка за просрочку, штраф 50% в пользу потребителя по Закону о защите прав потребителей.',
   },
   {
+    num: '04',
     icon: 'Gavel',
     title: 'Судебное представительство',
-    subtitle: 'Ведение дел в судах любой инстанции',
-    problem: 'Вам нужен профессиональный представитель в суде — арбитраже, общей юрисдикции, апелляции.',
+    for: 'both',
+    problem: 'Нужен профессиональный представитель в суде общей юрисдикции или арбитражном суде.',
     actions: [
-      'Полный анализ дела и формирование стратегии',
-      'Подготовка процессуальных документов',
-      'Участие во всех судебных заседаниях',
-      'Обжалование в апелляционной и кассационной инстанциях',
+      'Изучаем материалы дела',
+      'Формируем правовую позицию',
+      'Готовим документы',
+      'Участвуем в заседаниях',
     ],
-    result: 'Профессиональная защита ваших интересов от первой инстанции до исполнения решения',
+    result: 'Профессиональная защита интересов на всех стадиях судебного процесса — от подачи иска до исполнения решения.',
   },
   {
+    num: '05',
     icon: 'FileText',
-    title: 'Договорная работа',
-    subtitle: 'Договоры, претензии, правовая экспертиза',
-    problem: 'Нужно составить, проверить или расторгнуть договор, взыскать долг по договору.',
+    title: 'Договорная работа и претензии',
+    for: 'both',
+    problem: 'Контрагент нарушил договор, нужно составить претензию или защититься от необоснованных требований.',
     actions: [
-      'Правовая экспертиза договора',
-      'Разработка или редактирование договора',
-      'Досудебная претензия контрагенту',
-      'Судебное взыскание по договору',
+      'Анализируем договор, выявляем нарушения',
+      'Готовим претензию или правовую позицию для ответа',
     ],
-    result: 'Юридически чистый договор или успешное взыскание по нарушенному',
+    result: 'Урегулирование спора в досудебном порядке или сформированная база для судебного взыскания.',
   },
   {
+    num: '06',
     icon: 'Briefcase',
-    title: 'Сопровождение бизнеса',
-    subtitle: 'Юридический аутсорсинг',
-    problem: 'Компании нужна постоянная юридическая поддержка без штатного юриста.',
+    title: 'Юридическое сопровождение бизнеса',
+    for: 'business',
+    problem: 'Бизнесу нужна системная юридическая поддержка без содержания штатного юриста.',
     actions: [
-      'Абонентское юридическое обслуживание',
-      'Проверка контрагентов',
-      'Сопровождение сделок и переговоров',
-      'Защита в корпоративных спорах',
+      'Ведём договорную работу',
+      'Даём консультации',
+      'Представляем интересы в спорах',
+      'Проверяем контрагентов',
     ],
-    result: 'Снижение юридических рисков и защита активов бизнеса',
+    result: 'Защита бизнеса от правовых рисков, снижение претензионной нагрузки, уверенность в каждом решении.',
   },
   {
+    num: '07',
     icon: 'Heart',
     title: 'Семейные споры',
-    subtitle: 'Развод, раздел имущества, алименты',
-    problem: 'Расторжение брака, раздел совместно нажитого имущества или взыскание алиментов.',
+    for: 'citizens',
+    problem: 'Развод, раздел совместно нажитого имущества, споры об алиментах или воспитании детей.',
     actions: [
-      'Анализ имущественных прав и раздел активов',
-      'Соглашение или иск о разделе имущества',
-      'Взыскание алиментов, изменение размера',
-      'Определение места жительства детей',
+      'Оцениваем состав имущества',
+      'Формируем позицию',
+      'Ведём переговоры или судебный процесс',
     ],
-    result: 'Справедливый раздел имущества, взыскание алиментов, защита интересов детей',
+    result: 'Справедливый раздел имущества, установление алиментов, защита интересов детей.',
   },
   {
+    num: '08',
     icon: 'Scale',
-    title: 'Административные споры',
-    subtitle: 'Оспаривание решений органов власти (КАС РФ)',
-    problem: 'Незаконный штраф, отказ госоргана, нарушение прав со стороны администрации.',
+    title: 'Административные споры (КАС РФ)',
+    for: 'both',
+    problem: 'Незаконные действия или бездействие государственных органов, нарушение прав граждан.',
     actions: [
-      'Анализ законности действий органа власти',
-      'Жалоба в вышестоящий орган',
-      'Административный иск по КАС РФ',
-      'Взыскание компенсации и убытков',
+      'Подаём административный иск',
+      'Обжалуем решения органов власти',
+      'Представляем интересы в суде',
     ],
-    result: 'Отмена незаконного решения, восстановление прав, компенсация ущерба',
+    result: 'Признание действий органов незаконными, восстановление нарушенных прав, взыскание компенсации.',
   },
 ];
 
+type Filter = 'all' | 'business' | 'citizens';
+
 export default function Practice() {
+  const [filter, setFilter] = useState<Filter>('all');
+  const [showModal, setShowModal] = useState(false);
+
+  const visible = ALL_AREAS.filter(a =>
+    filter === 'all' || a.for === filter || a.for === 'both'
+  );
+
   return (
     <Layout>
+      {showModal && <SituationModal onClose={() => setShowModal(false)} />}
+
       {/* Hero */}
       <section
         className="relative pt-32 pb-20"
@@ -128,21 +142,43 @@ export default function Practice() {
             <div className="w-8 h-px" style={{ backgroundColor: G }} />
             <span className="font-golos text-[11px] tracking-[0.3em] uppercase" style={{ color: G }}>направления</span>
           </div>
-          <h1 className="font-cormorant font-semibold text-white mb-6" style={{ fontSize: 'clamp(36px, 4.5vw, 60px)' }}>
+          <h1 className="font-cormorant font-semibold text-white mb-4" style={{ fontSize: 'clamp(36px, 4.5vw, 60px)' }}>
             Практика
           </h1>
-          <p className="font-golos text-[16px] leading-relaxed max-w-2xl" style={{ color: PROSE }}>
-            8 направлений. В каждом — чёткая стратегия, понятный процесс и ориентация на результат.
+          <p className="font-golos text-[15px] leading-relaxed max-w-2xl mb-10" style={{ color: PROSE }}>
+            Работаем только в тех областях, где накоплен реальный опыт. Для каждого направления — чёткая стратегия и измеримый результат.
           </p>
+
+          {/* Фильтр */}
+          <div className="flex flex-wrap gap-3">
+            {([
+              { key: 'all', label: 'Все направления' },
+              { key: 'business', label: 'Практика для бизнеса' },
+              { key: 'citizens', label: 'Практика для граждан' },
+            ] as { key: Filter; label: string }[]).map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setFilter(tab.key)}
+                className="font-golos text-[13px] font-medium px-6 py-2.5 transition-all duration-200"
+                style={{
+                  background: filter === tab.key ? G : 'transparent',
+                  color: filter === tab.key ? DEEP : G,
+                  border: `1px solid ${filter === tab.key ? G : 'rgba(200,163,95,0.35)'}`,
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Направления */}
       <section style={{ background: DEEP }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-20 space-y-6">
-          {AREAS.map((a, i) => (
+        <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 space-y-5">
+          {visible.map((a, i) => (
             <div
-              key={a.title}
+              key={a.num}
               className="p-8"
               style={{
                 background: i % 2 === 0 ? 'rgba(255,255,255,0.02)' : NAVY,
@@ -153,27 +189,25 @@ export default function Practice() {
                 {/* Заголовок */}
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 flex items-center justify-center" style={{ border: `1px solid rgba(200,163,95,0.3)`, color: G }}>
-                      <Icon name={a.icon} size={18} />
-                    </div>
-                    <div>
-                      <div className="font-golos font-semibold text-white text-[15px]">{a.title}</div>
-                      <div className="font-golos text-[12px]" style={{ color: MUTED }}>{a.subtitle}</div>
+                    <span className="font-cormorant font-light text-[40px] leading-none" style={{ color: 'rgba(200,163,95,0.2)' }}>
+                      {a.num}
+                    </span>
+                    <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ border: `1px solid rgba(200,163,95,0.3)`, color: G }}>
+                      <Icon name={a.icon} size={16} />
                     </div>
                   </div>
-                  <p className="font-golos text-[13px] leading-relaxed" style={{ color: PROSE }}>
-                    <span className="font-medium" style={{ color: MUTED }}>Ситуация: </span>
-                    {a.problem}
-                  </p>
+                  <h2 className="font-golos font-semibold text-white text-[16px] leading-snug mb-4">{a.title}</h2>
+                  <div className="font-golos text-[11px] tracking-[0.15em] uppercase mb-1" style={{ color: MUTED }}>Проблема</div>
+                  <p className="font-golos text-[13px] leading-relaxed" style={{ color: PROSE }}>{a.problem}</p>
                 </div>
 
                 {/* Действия */}
                 <div>
-                  <div className="font-golos text-[11px] tracking-[0.2em] uppercase mb-4" style={{ color: G }}>Что делаем</div>
-                  <ul className="space-y-2">
+                  <div className="font-golos text-[11px] tracking-[0.2em] uppercase mb-4" style={{ color: G }}>Действия юриста</div>
+                  <ul className="space-y-2.5">
                     {a.actions.map((act) => (
                       <li key={act} className="flex items-start gap-3">
-                        <div className="w-1 h-1 rounded-full mt-2 shrink-0" style={{ backgroundColor: G }} />
+                        <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: G }} />
                         <span className="font-golos text-[13px] leading-relaxed" style={{ color: PROSE }}>{act}</span>
                       </li>
                     ))}
@@ -181,12 +215,18 @@ export default function Practice() {
                 </div>
 
                 {/* Результат + CTA */}
-                <div className="flex flex-col justify-between">
-                  <div className="p-4 mb-5" style={{ background: 'rgba(200,163,95,0.06)', border: '1px solid rgba(200,163,95,0.15)' }}>
+                <div className="flex flex-col justify-between gap-5">
+                  <div className="p-4" style={{ background: 'rgba(200,163,95,0.06)', border: '1px solid rgba(200,163,95,0.15)' }}>
                     <div className="font-golos text-[11px] tracking-[0.2em] uppercase mb-2" style={{ color: G }}>Результат</div>
                     <p className="font-golos text-[13px] leading-relaxed" style={{ color: PROSE }}>{a.result}</p>
                   </div>
-                  <BtnPrimary to="/contacts">Разобрать мою ситуацию</BtnPrimary>
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className="font-golos font-semibold text-[13px] py-3.5 px-6 transition-opacity hover:opacity-85 text-center"
+                    style={{ background: G, color: DEEP }}
+                  >
+                    Разобрать мою ситуацию
+                  </button>
                 </div>
               </div>
             </div>

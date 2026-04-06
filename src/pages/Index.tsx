@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import Layout from '@/components/Layout';
 import BtnPrimary from '@/components/ui/BtnPrimary';
 import BtnSecondary from '@/components/ui/BtnSecondary';
 import Icon from '@/components/ui/icon';
 import { Link } from 'react-router-dom';
+import SituationModal from '@/components/SituationModal';
 
 const NAVY = '#0B1F3A';
 const DEEP = '#081629';
@@ -73,8 +75,11 @@ const PRICING = [
 ];
 
 export default function Index() {
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <Layout>
+      {showModal && <SituationModal onClose={() => setShowModal(false)} />}
       {/* БЛОК 1: HERO */}
       <section
         className="relative min-h-screen flex items-center overflow-hidden"
@@ -110,7 +115,7 @@ export default function Index() {
               <div className="flex items-center gap-4 mb-7">
                 <div className="w-10 h-px" style={{ backgroundColor: 'rgba(200,163,95,0.3)' }} />
                 <p className="font-golos text-[14px]" style={{ color: PROSE }}>
-                  Суды · Споры · Договоры · Банкротство · Взыскание задолженности
+                  Суды · Споры · Договоры · Страховые споры (ОСАГО, КАСКО) · Взыскание задолженности
                 </p>
               </div>
 
@@ -143,7 +148,15 @@ export default function Index() {
 
               <div className="flex flex-wrap gap-4">
                 <BtnPrimary to="/contacts">Получить консультацию</BtnPrimary>
-                <BtnSecondary to="/contacts">Разобрать мою ситуацию</BtnSecondary>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="font-golos font-semibold px-8 py-4 inline-block transition-all duration-200 text-[15px] tracking-wide"
+                  style={{ border: '1px solid rgba(200,163,95,0.45)', color: G }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#C8A35F')}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(200,163,95,0.45)')}
+                >
+                  Разобрать мою ситуацию
+                </button>
               </div>
             </div>
 
@@ -208,7 +221,7 @@ export default function Index() {
                   <h3 className="font-cormorant font-semibold text-white text-[28px]">{card.title}</h3>
                 </div>
                 <p className="font-golos text-[14px] leading-relaxed mb-6" style={{ color: PROSE }}>{card.desc}</p>
-                <ul className="space-y-2">
+                <ul className="space-y-2 mb-7">
                   {card.items.map((it) => (
                     <li key={it} className="flex items-center gap-3">
                       <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: G }} />
@@ -216,6 +229,14 @@ export default function Index() {
                     </li>
                   ))}
                 </ul>
+                <Link
+                  to="/practice"
+                  className="inline-flex items-center gap-2 font-golos text-[13px] font-medium transition-opacity hover:opacity-75"
+                  style={{ color: G }}
+                >
+                  {card.title === 'Бизнесу' ? 'Практика для бизнеса' : 'Практика для граждан'}
+                  <Icon name="ArrowRight" size={14} />
+                </Link>
               </div>
             ))}
           </div>
