@@ -16,3 +16,17 @@ export const C = {
 };
 
 export type Method = 'sbp' | 'card' | 'invoice';
+
+export type ServiceType =
+  | 'Письменная консультация (разобрать мою ситуацию)'
+  | 'Составление документа / договора'
+  | 'Представление интересов в суде'
+  | 'Абонентское юридическое обслуживание'
+  | 'Иное';
+
+export interface PayerInfo {
+  fio: string;
+  inn: string;
+  email: string;
+  service: ServiceType;
+}

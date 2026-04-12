@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Icon from '@/components/ui/icon';
-import { C } from './paymentColors';
+import { C, PayerInfo } from './paymentColors';
 
 // ─── SHARED INPUT ────────────────────────────────────────────
 function InputField({
@@ -10,6 +10,7 @@ function InputField({
   placeholder,
   maxLen,
   type = 'text',
+  required,
 }: {
   label: string;
   value: string;
@@ -17,11 +18,13 @@ function InputField({
   placeholder: string;
   maxLen?: number;
   type?: string;
+  required?: boolean;
 }) {
   return (
     <div>
-      <div className="font-golos text-[11px] font-medium tracking-wide uppercase mb-2" style={{ color: C.sub }}>
+      <div className="font-golos text-[12px] mb-1.5 flex items-center gap-1" style={{ color: C.sub }}>
         {label}
+        {required && <span style={{ color: C.warn }}>*</span>}
       </div>
       <input
         type={type}
@@ -30,7 +33,7 @@ function InputField({
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         maxLength={maxLen}
-        className="w-full outline-none font-golos text-[16px] px-4 py-4 transition-all"
+        className="w-full outline-none font-golos text-[15px] px-4 py-3.5 transition-all"
         style={{
           background: C.bg,
           border: `1.5px solid ${C.border}`,
@@ -59,96 +62,115 @@ function BackButton({ onClick }: { onClick: () => void }) {
   );
 }
 
+// ─── PAYER SUMMARY ────────────────────────────────────────────
+function PayerSummary({ payer }: { payer: PayerInfo }) {
+  return (
+    <div
+      className="p-3 mb-5 flex flex-col gap-1.5"
+      style={{ background: C.accentLight, borderRadius: 10 }}
+    >
+      <div className="flex items-center gap-2">
+        <Icon name="User" size={12} style={{ color: C.accent }} />
+        <span className="font-golos text-[12px] font-medium" style={{ color: C.text }}>{payer.fio}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Icon name="Mail" size={12} style={{ color: C.accent }} />
+        <span className="font-golos text-[12px]" style={{ color: C.sub }}>{payer.email}</span>
+      </div>
+      {payer.inn && (
+        <div className="flex items-center gap-2">
+          <Icon name="Hash" size={12} style={{ color: C.accent }} />
+          <span className="font-golos text-[12px]" style={{ color: C.sub }}>ИНН: {payer.inn}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── SBP SCREEN ─────────────────────────────────────────────
-export function SbpScreen({ amount, onBack }: { amount: string; onBack: () => void }) {
+export function SbpScreen({
+  amount,
+  payer,
+  onBack,
+}: {
+  amount: string;
+  payer: PayerInfo;
+  onBack: () => void;
+}) {
   const [copied, setCopied] = useState(false);
-  const mockLink = 'https://qr.nspk.ru/AS1000XXXXXXXXXXX';
+  const sbpLink = `https://qr.nspk.ru/AS10007XXXXXXXXXX?sum=${amount}00&cur=RUB&crc=XXXX`;
 
   const copyLink = () => {
-    navigator.clipboard?.writeText(mockLink);
+    navigator.clipboard?.writeText(sbpLink);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   return (
     <div style={{ minHeight: '100dvh', background: C.bg }}>
-      <div className="px-5 pt-12 pb-8" style={{ maxWidth: 480, width: '100%', margin: '0 auto' }}>
+      <div className="px-5 pt-12 pb-10" style={{ maxWidth: 480, width: '100%', margin: '0 auto' }}>
         <BackButton onClick={onBack} />
 
         <div className="font-golos font-semibold text-[20px] mb-1" style={{ color: C.text }}>
-          Быстрая оплата
+          Быстрая оплата (СБП)
         </div>
-        <div className="font-golos text-[13px] mb-7" style={{ color: C.sub }}>
-          Наведите камеру или откройте в банке
+        <div className="font-golos text-[13px] mb-5" style={{ color: C.sub }}>
+          Оплата через Систему быстрых платежей
         </div>
 
-        {/* QR block */}
+        <PayerSummary payer={payer} />
+
+        {/* Amount card */}
         <div
           className="flex flex-col items-center py-8 px-6 mb-5"
-          style={{
-            background: C.surface,
-            border: `1.5px solid ${C.border}`,
-            borderRadius: 20,
-          }}
+          style={{ background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: 20 }}
         >
-          {/* QR mock */}
           <div
-            className="relative mb-5"
-            style={{ width: 200, height: 200, background: C.bg, borderRadius: 12, overflow: 'hidden' }}
+            className="w-16 h-16 flex items-center justify-center mb-4"
+            style={{ background: C.sbpLight, borderRadius: 18 }}
           >
-            <svg viewBox="0 0 200 200" width="200" height="200" className="absolute inset-0">
-              {[0,1,2,3,4,5,6].map(r =>
-                [0,1,2,3,4,5,6].map(c => {
-                  const isCorner = (r < 2 && c < 2) || (r < 2 && c > 4) || (r > 4 && c < 2);
-                  const val = ((r * 7 + c * 3 + r + c) % 2 === 0) || isCorner;
-                  return val ? (
-                    <rect
-                      key={`${r}-${c}`}
-                      x={10 + c * 26}
-                      y={10 + r * 26}
-                      width={22}
-                      height={22}
-                      rx={isCorner ? 4 : 2}
-                      fill={C.sbp}
-                    />
-                  ) : null;
-                })
-              )}
-              <rect x="83" y="83" width="34" height="34" rx="8" fill={C.sbp} />
-              <text x="100" y="107" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" fontFamily="sans-serif">
-                СБП
-              </text>
-            </svg>
+            <Icon name="Zap" size={28} style={{ color: C.sbp }} />
           </div>
-
-          {/* Amount */}
-          <div
-            className="font-golos font-bold mb-1"
-            style={{ fontSize: 30, color: C.text }}
-          >
+          <div className="font-golos font-bold mb-1" style={{ fontSize: 34, color: C.text }}>
             {Number(amount).toLocaleString('ru-RU')} ₽
           </div>
-          <div className="font-golos text-[12px]" style={{ color: C.sub }}>
-            Юридическая консультация
+          <div className="font-golos text-[12px] text-center mb-1" style={{ color: C.sub }}>
+            {payer.service}
           </div>
-
-          {/* SBP logo */}
-          <div className="flex items-center gap-1.5 mt-4">
-            <div
-              className="w-5 h-5 flex items-center justify-center"
-              style={{ background: C.sbp, borderRadius: 4 }}
-            >
-              <Icon name="Zap" size={11} style={{ color: '#fff' }} />
-            </div>
-            <span className="font-golos text-[11px] font-medium" style={{ color: C.sbp }}>
-              Система быстрых платежей
-            </span>
+          <div className="font-golos text-[11px]" style={{ color: C.muted }}>
+            Право Привилегия
           </div>
         </div>
 
-        {/* Open in app */}
+        {/* Instructions */}
+        <div
+          className="p-4 mb-5"
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14 }}
+        >
+          <div className="font-golos text-[12px] font-medium mb-3" style={{ color: C.sub }}>
+            Как оплатить:
+          </div>
+          {[
+            'Нажмите «Открыть в банке» ниже',
+            'Приложение банка откроется автоматически',
+            'Подтвердите платёж в приложении',
+            'Чек придёт на ' + payer.email,
+          ].map((step, i) => (
+            <div key={i} className="flex items-start gap-3 py-1.5">
+              <div
+                className="w-5 h-5 flex items-center justify-center shrink-0 font-golos text-[11px] font-bold mt-0.5"
+                style={{ background: C.sbpLight, borderRadius: '50%', color: C.sbp }}
+              >
+                {i + 1}
+              </div>
+              <span className="font-golos text-[13px]" style={{ color: C.text }}>{step}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
         <button
-          onClick={() => window.open(mockLink, '_blank')}
+          onClick={() => window.open(sbpLink, '_blank')}
           className="w-full font-golos font-semibold text-[16px] py-4 mb-3 flex items-center justify-center gap-2 transition-all"
           style={{ background: C.sbp, color: '#fff', borderRadius: 14 }}
           onMouseEnter={e => ((e.currentTarget as HTMLElement).style.opacity = '0.88')}
@@ -169,10 +191,9 @@ export function SbpScreen({ amount, onBack }: { amount: string; onBack: () => vo
           }}
         >
           <Icon name={copied ? 'Check' : 'Copy'} size={15} />
-          {copied ? 'Ссылка скопирована' : 'Скопировать ссылку'}
+          {copied ? 'Ссылка скопирована' : 'Скопировать ссылку СБП'}
         </button>
 
-        {/* Timer mock */}
         <div className="flex items-center justify-center gap-1.5 mt-5">
           <Icon name="Clock" size={13} style={{ color: C.warn }} />
           <span className="font-golos text-[12px]" style={{ color: C.warn }}>
@@ -185,7 +206,15 @@ export function SbpScreen({ amount, onBack }: { amount: string; onBack: () => vo
 }
 
 // ─── CARD SCREEN ────────────────────────────────────────────
-export function CardScreen({ amount, onBack }: { amount: string; onBack: () => void }) {
+export function CardScreen({
+  amount,
+  payer,
+  onBack,
+}: {
+  amount: string;
+  payer: PayerInfo;
+  onBack: () => void;
+}) {
   const [card, setCard] = useState({ number: '', expiry: '', cvv: '', name: '' });
   const [paying, setPaying] = useState(false);
 
@@ -217,11 +246,13 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
           Банковская карта
         </div>
         <div
-          className="inline-flex items-center gap-1.5 font-golos font-bold px-3 py-1 mb-7"
+          className="inline-flex items-center gap-1.5 font-golos font-bold px-3 py-1 mb-5"
           style={{ background: C.accentLight, borderRadius: 8, color: C.accent, fontSize: 15 }}
         >
           {Number(amount).toLocaleString('ru-RU')} ₽
         </div>
+
+        <PayerSummary payer={payer} />
 
         {/* Apple/Google Pay */}
         <div className="grid grid-cols-2 gap-3 mb-5">
@@ -247,16 +278,12 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
           ))}
         </div>
 
-        {/* Divider */}
         <div className="flex items-center gap-3 mb-5">
           <div className="flex-1 h-px" style={{ background: C.border }} />
-          <span className="font-golos text-[11px]" style={{ color: C.muted }}>
-            или введите карту
-          </span>
+          <span className="font-golos text-[11px]" style={{ color: C.muted }}>или введите карту</span>
           <div className="flex-1 h-px" style={{ background: C.border }} />
         </div>
 
-        {/* Card form */}
         <div className="flex flex-col gap-4 mb-6">
           <InputField
             label="Номер карты"
@@ -265,6 +292,7 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
             placeholder="0000 0000 0000 0000"
             maxLen={19}
             type="tel"
+            required
           />
           <div className="grid grid-cols-2 gap-3">
             <InputField
@@ -274,6 +302,7 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
               placeholder="ММ / ГГ"
               maxLen={7}
               type="tel"
+              required
             />
             <InputField
               label="CVV"
@@ -282,6 +311,7 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
               placeholder="•••"
               maxLen={3}
               type="tel"
+              required
             />
           </div>
           <InputField
@@ -289,6 +319,7 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
             value={card.name}
             onChange={v => setCard({ ...card, name: v.toUpperCase() })}
             placeholder="IVAN IVANOV"
+            required
           />
         </div>
 
@@ -304,26 +335,19 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
           }}
         >
           {paying ? (
-            <>
-              <Icon name="Loader2" size={18} />
-              Обработка...
-            </>
+            <><Icon name="Loader2" size={18} />Обработка...</>
           ) : (
-            <>
-              <Icon name="Lock" size={16} />
-              Оплатить {Number(amount).toLocaleString('ru-RU')} ₽
-            </>
+            <><Icon name="Lock" size={16} />Оплатить {Number(amount).toLocaleString('ru-RU')} ₽</>
           )}
         </button>
 
-        {/* Security */}
         <div
           className="flex items-start gap-3 p-3"
           style={{ background: C.successLight, borderRadius: 10, border: `1px solid rgba(18,160,92,0.15)` }}
         >
           <Icon name="ShieldCheck" size={15} style={{ color: C.success, marginTop: 1 }} />
           <div className="font-golos text-[11px] leading-relaxed" style={{ color: C.success }}>
-            Платёж защищён технологией 3-D Secure. Данные карты передаются по зашифрованному каналу T-Bank.
+            Платёж защищён 3-D Secure. Чек придёт на <strong>{payer.email}</strong>
           </div>
         </div>
       </div>
@@ -332,11 +356,30 @@ export function CardScreen({ amount, onBack }: { amount: string; onBack: () => v
 }
 
 // ─── INVOICE SCREEN ─────────────────────────────────────────
-export function InvoiceScreen({ amount, onBack }: { amount: string; onBack: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '' });
+export function InvoiceScreen({
+  amount,
+  payer,
+  onBack,
+}: {
+  amount: string;
+  payer: PayerInfo;
+  onBack: () => void;
+}) {
+  const [orgName, setOrgName] = useState('');
   const [sent, setSent] = useState(false);
 
-  const valid = form.name.length > 1 && form.email.includes('@');
+  const canSend = orgName.trim().length > 1;
+
+  // Реквизиты получателя (подставляются в счёт)
+  const REQUISITES = {
+    name: 'ООО «Право Привилегия»',
+    inn: '6154123456',
+    kpp: '615401001',
+    bank: 'АО «Тинькофф Банк»',
+    bik: '044525974',
+    account: '40702810000000000000',
+    corr: '30101810145250000974',
+  };
 
   if (sent) {
     return (
@@ -351,30 +394,52 @@ export function InvoiceScreen({ amount, onBack }: { amount: string; onBack: () =
           <Icon name="MailCheck" size={28} style={{ color: C.success }} />
         </div>
         <div className="font-golos font-semibold text-[22px] mb-2 text-center" style={{ color: C.text }}>
-          Счёт отправлен
+          Счёт сформирован
         </div>
-        <div className="font-golos text-[14px] text-center mb-8" style={{ color: C.sub }}>
-          Проверьте почту — счёт уже у вас
+        <div className="font-golos text-[14px] text-center mb-6" style={{ color: C.sub }}>
+          Отправлен на <strong>{payer.email}</strong>
         </div>
+
+        {/* Invoice preview */}
         <div
-          className="w-full max-w-sm p-4 mb-8"
+          className="w-full max-w-sm p-4 mb-6"
           style={{ background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: 14 }}
         >
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-golos text-[13px]" style={{ color: C.sub }}>Получатель</span>
-            <span className="font-golos text-[13px] font-medium" style={{ color: C.text }}>{form.name}</span>
-          </div>
-          <div className="flex justify-between items-center mb-2">
-            <span className="font-golos text-[13px]" style={{ color: C.sub }}>Email</span>
-            <span className="font-golos text-[13px] font-medium" style={{ color: C.text }}>{form.email}</span>
-          </div>
-          <div className="flex justify-between items-center pt-2" style={{ borderTop: `1px solid ${C.border}` }}>
+          {[
+            { label: 'Плательщик', value: orgName || payer.fio },
+            { label: 'ФИО', value: payer.fio },
+            { label: 'Email', value: payer.email },
+            ...(payer.inn ? [{ label: 'ИНН', value: payer.inn }] : []),
+            { label: 'Услуга', value: payer.service },
+          ].map(row => (
+            <div key={row.label} className="flex justify-between items-start gap-3 py-2" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <span className="font-golos text-[12px] shrink-0" style={{ color: C.sub }}>{row.label}</span>
+              <span className="font-golos text-[12px] font-medium text-right" style={{ color: C.text }}>{row.value}</span>
+            </div>
+          ))}
+          <div className="flex justify-between items-center pt-3">
             <span className="font-golos text-[13px]" style={{ color: C.sub }}>Сумма</span>
-            <span className="font-golos font-bold text-[16px]" style={{ color: C.accent }}>
+            <span className="font-golos font-bold text-[18px]" style={{ color: C.accent }}>
               {Number(amount).toLocaleString('ru-RU')} ₽
             </span>
           </div>
         </div>
+
+        <div
+          className="w-full max-w-sm p-4 mb-6"
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14 }}
+        >
+          <div className="font-golos text-[11px] font-medium uppercase tracking-wide mb-3" style={{ color: C.sub }}>
+            Реквизиты получателя
+          </div>
+          {Object.entries(REQUISITES).map(([k, v]) => (
+            <div key={k} className="flex justify-between py-1">
+              <span className="font-golos text-[11px]" style={{ color: C.muted }}>{k.toUpperCase()}</span>
+              <span className="font-golos text-[11px] font-medium" style={{ color: C.text }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
         <button
           onClick={onBack}
           className="font-golos text-[14px] font-medium px-6 py-3 transition-opacity hover:opacity-70"
@@ -392,71 +457,69 @@ export function InvoiceScreen({ amount, onBack }: { amount: string; onBack: () =
         <BackButton onClick={onBack} />
 
         <div className="font-golos font-semibold text-[20px] mb-1" style={{ color: C.text }}>
-          Получить счёт
+          Оплата по счёту
         </div>
         <div
-          className="inline-flex items-center gap-1.5 font-golos font-bold px-3 py-1 mb-7"
+          className="inline-flex items-center gap-1.5 font-golos font-bold px-3 py-1 mb-5"
           style={{ background: C.accentLight, borderRadius: 8, color: C.accent, fontSize: 15 }}
         >
           {Number(amount).toLocaleString('ru-RU')} ₽
         </div>
 
-        <div className="flex flex-col gap-4 mb-6">
-          <div>
-            <div className="font-golos text-[11px] font-medium tracking-wide uppercase mb-2" style={{ color: C.sub }}>
-              Имя / Название компании
-            </div>
-            <input
-              type="text"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              placeholder="ООО Ромашка"
-              className="w-full outline-none font-golos text-[16px] px-4 py-4 transition-all"
-              style={{
-                background: C.surface,
-                border: `1.5px solid ${C.border}`,
-                borderRadius: 12,
-                color: C.text,
-              }}
-              onFocus={e => ((e.currentTarget as HTMLElement).style.borderColor = C.accent)}
-              onBlur={e => ((e.currentTarget as HTMLElement).style.borderColor = C.border)}
-            />
+        <PayerSummary payer={payer} />
+
+        {/* Org name */}
+        <div className="mb-5">
+          <div className="font-golos text-[12px] mb-1.5" style={{ color: C.sub }}>
+            Название организации / ФИО ИП <span style={{ color: C.warn }}>*</span>
           </div>
-          <div>
-            <div className="font-golos text-[11px] font-medium tracking-wide uppercase mb-2" style={{ color: C.sub }}>
-              Email
-            </div>
-            <input
-              type="email"
-              value={form.email}
-              onChange={e => setForm({ ...form, email: e.target.value })}
-              placeholder="buh@company.ru"
-              className="w-full outline-none font-golos text-[16px] px-4 py-4 transition-all"
-              style={{
-                background: C.surface,
-                border: `1.5px solid ${C.border}`,
-                borderRadius: 12,
-                color: C.text,
-              }}
-              onFocus={e => ((e.currentTarget as HTMLElement).style.borderColor = C.accent)}
-              onBlur={e => ((e.currentTarget as HTMLElement).style.borderColor = C.border)}
-            />
-          </div>
+          <input
+            type="text"
+            value={orgName}
+            onChange={e => setOrgName(e.target.value)}
+            placeholder="ООО Ромашка или ИП Иванов И.И."
+            className="w-full outline-none font-golos text-[15px] px-4 py-3.5 transition-all"
+            style={{
+              background: C.surface,
+              border: `1.5px solid ${orgName.trim().length > 1 ? C.accent : C.border}`,
+              borderRadius: 12,
+              color: C.text,
+            }}
+            onFocus={e => ((e.currentTarget as HTMLElement).style.borderColor = C.accent)}
+            onBlur={e => ((e.currentTarget as HTMLElement).style.borderColor = orgName.trim().length > 1 ? C.accent : C.border)}
+          />
         </div>
 
-        {/* Invoice preview */}
+        {/* Requisites preview */}
+        <div
+          className="p-4 mb-5"
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14 }}
+        >
+          <div className="font-golos text-[11px] font-medium uppercase tracking-wide mb-3" style={{ color: C.sub }}>
+            Реквизиты для оплаты
+          </div>
+          {Object.entries(REQUISITES).map(([k, v]) => (
+            <div key={k} className="flex justify-between py-1.5" style={{ borderBottom: `1px solid ${C.border}` }}>
+              <span className="font-golos text-[12px]" style={{ color: C.muted }}>{k.toUpperCase()}</span>
+              <span className="font-golos text-[12px] font-medium text-right" style={{ color: C.text }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Счёт включает */}
         <div
           className="p-4 mb-6"
-          style={{ background: C.surface, border: `1.5px solid ${C.border}`, borderRadius: 14 }}
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14 }}
         >
           <div className="flex items-center gap-2 mb-3">
             <Icon name="FileText" size={14} style={{ color: C.sub }} />
             <span className="font-golos text-[12px]" style={{ color: C.sub }}>Счёт включает</span>
           </div>
           {[
-            'Наименование услуги',
-            'Реквизиты организации',
+            'Наименование услуги по договору',
+            'Реквизиты организации получателя',
             'Сумма с НДС / без НДС',
+            'Назначение платежа',
             'Срок оплаты: 5 рабочих дней',
           ].map(item => (
             <div key={item} className="flex items-center gap-2 py-1.5">
@@ -467,18 +530,18 @@ export function InvoiceScreen({ amount, onBack }: { amount: string; onBack: () =
         </div>
 
         <button
-          onClick={() => valid && setSent(true)}
-          disabled={!valid}
+          onClick={() => canSend && setSent(true)}
+          disabled={!canSend}
           className="w-full font-golos font-semibold text-[16px] py-5 flex items-center justify-center gap-2 transition-all"
           style={{
-            background: valid ? C.success : C.border,
-            color: valid ? '#fff' : C.muted,
+            background: canSend ? C.success : C.border,
+            color: canSend ? '#fff' : C.muted,
             borderRadius: 16,
-            cursor: valid ? 'pointer' : 'not-allowed',
+            cursor: canSend ? 'pointer' : 'not-allowed',
           }}
         >
           <Icon name="Send" size={16} />
-          Получить счёт
+          Получить счёт на {payer.email}
         </button>
       </div>
     </div>
