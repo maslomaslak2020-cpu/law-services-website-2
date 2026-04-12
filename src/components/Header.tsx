@@ -9,6 +9,7 @@ const NAV = [
   { label: 'Кейсы', to: '/cases' },
   { label: 'Блог', to: '/blog' },
   { label: 'Контакты', to: '/contacts' },
+  { label: 'Оплатить', to: '/payment' },
 ];
 
 const DEEP = '#081629';
